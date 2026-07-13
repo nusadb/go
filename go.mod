@@ -1,3 +1,3 @@
-module github.com/nusadb/nusadb-go
+module github.com/nusadb/go
 
 go 1.24

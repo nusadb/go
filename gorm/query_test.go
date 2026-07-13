@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	nusadbgorm "github.com/nusadb/nusadb-go/gorm"
+	nusadbgorm "github.com/nusadb/go/gorm"
 	"gorm.io/gorm"
 )
 

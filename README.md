@@ -9,7 +9,7 @@ type name (protocol 1.1).
 ## Install
 
 ```bash
-go get github.com/nusadb/nusadb-go
+go get github.com/nusadb/go
 ```
 
 Requires Go 1.24+.
@@ -19,7 +19,7 @@ Requires Go 1.24+.
 ```go
 import (
 	"database/sql"
-	_ "github.com/nusadb/nusadb-go" // registers the "nusadb" driver
+	_ "github.com/nusadb/go" // registers the "nusadb" driver
 )
 
 db, err := sql.Open("nusadb", "nusadb://nusa-root@127.0.0.1:5678/nusadb")

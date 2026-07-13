@@ -1,0 +1,110 @@
+name: Release
+
+# Go has no upload step: a module is "published" by pushing a semver tag, after which
+# proxy.golang.org serves it. This workflow validates the tag, then warms the proxy so
+# `go get` resolves immediately instead of on the first consumer's request.
+#
+# Two modules live in this repo, each with its own tag namespace:
+#   github.com/nusadb/go        -> tag  v0.1.0
+#   github.com/nusadb/go/gorm   -> tag  gorm/v0.1.0
+#
+# Tag the root FIRST. gorm/go.mod requires github.com/nusadb/go v0.1.0, and consumers
+# ignore the `replace` directive, so that version must already exist on the proxy.
+#
+#   git tag v0.1.0      && git push origin v0.1.0
+#   git tag gorm/v0.1.0 && git push origin gorm/v0.1.0
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+      - 'gorm/v[0-9]+.[0-9]+.[0-9]+'
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+
+      - name: Resolve module from tag
+        id: mod
+        run: |
+          tag="${GITHUB_REF_NAME}"
+          if [[ "$tag" == gorm/* ]]; then
+            echo "dir=gorm"                        >> "$GITHUB_OUTPUT"
+            echo "module=github.com/nusadb/go/gorm" >> "$GITHUB_OUTPUT"
+            echo "version=${tag#gorm/}"            >> "$GITHUB_OUTPUT"
+          else
+            echo "dir=."                           >> "$GITHUB_OUTPUT"
+            echo "module=github.com/nusadb/go"     >> "$GITHUB_OUTPUT"
+            echo "version=${tag}"                  >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Verify go.mod module path matches the tag
+        working-directory: ${{ steps.mod.outputs.dir }}
+        run: |
+          declared=$(go list -m)
+          expected="${{ steps.mod.outputs.module }}"
+          if [ "$declared" != "$expected" ]; then
+            echo "::error::tag ${GITHUB_REF_NAME} implies module $expected, but go.mod declares $declared"
+            exit 1
+          fi
+
+      - name: Build and vet
+        working-directory: ${{ steps.mod.outputs.dir }}
+        run: |
+          go build ./...
+          go vet ./...
+
+      # For the gorm submodule, drop the `replace` so the build resolves the root driver from
+      # the proxy exactly as a consumer would. This is the step that fails loudly if the root
+      # tag was never pushed.
+      - name: Verify the module resolves as a consumer sees it
+        if: steps.mod.outputs.dir == 'gorm'
+        working-directory: gorm
+        env:
+          GOFLAGS: -mod=mod
+        run: |
+          go mod edit -dropreplace=github.com/nusadb/go
+          go mod tidy
+          go build ./...
+
+      - name: Warm the module proxy
+        env:
+          GOPROXY: proxy.golang.org
+          GONOSUMDB: ''
+          GOFLAGS: ''
+        run: |
+          mod="${{ steps.mod.outputs.module }}"
+          ver="${{ steps.mod.outputs.version }}"
+          echo "Requesting $mod@$ver from proxy.golang.org ..."
+          # The proxy clones the tag on first request; retry while it does.
+          for attempt in 1 2 3 4 5; do
+            if go list -m "$mod@$ver"; then
+              echo "$mod@$ver is live."
+              exit 0
+            fi
+            echo "Not indexed yet (attempt $attempt/5); waiting 20s ..."
+            sleep 20
+          done
+          echo "::error::proxy.golang.org did not serve $mod@$ver after 5 attempts"
+          exit 1
+
+  github-release:
+    needs: release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "${GITHUB_REF_NAME}" --generate-notes --verify-tag

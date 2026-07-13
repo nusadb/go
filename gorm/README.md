@@ -7,7 +7,7 @@ against a NusaDB server.
 ## Install
 
 ```bash
-go get github.com/nusadb/nusadb-go/gorm
+go get github.com/nusadb/go/gorm
 ```
 
 ## Usage
@@ -15,7 +15,7 @@ go get github.com/nusadb/nusadb-go/gorm
 ```go
 import (
 	"gorm.io/gorm"
-	nusadbgorm "github.com/nusadb/nusadb-go/gorm"
+	nusadbgorm "github.com/nusadb/go/gorm"
 )
 
 type Product struct {
