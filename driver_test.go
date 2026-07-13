@@ -16,7 +16,7 @@ import (
 	"testing"
 	"time"
 
-	nusadb "github.com/nusadb/nusadb-go"
+	nusadb "github.com/nusadb/go"
 )
 
 // testServer is a child nusadb-server process on an ephemeral port.

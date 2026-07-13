@@ -4,7 +4,7 @@
 //
 //	import (
 //	    "gorm.io/gorm"
-//	    nusadbgorm "github.com/nusadb/nusadb-go/gorm"
+//	    nusadbgorm "github.com/nusadb/go/gorm"
 //	)
 //
 //	db, err := gorm.Open(nusadbgorm.Open("nusadb://nusa-root@127.0.0.1:5678/nusadb"), &gorm.Config{})
@@ -15,7 +15,7 @@ import (
 	"fmt"
 	"strconv"
 
-	_ "github.com/nusadb/nusadb-go" // registers the "nusadb" database/sql driver
+	_ "github.com/nusadb/go" // registers the "nusadb" database/sql driver
 	"gorm.io/gorm"
 	"gorm.io/gorm/callbacks"
 	"gorm.io/gorm/clause"

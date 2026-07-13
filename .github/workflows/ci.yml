@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    branches: [master, 'ci/**']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        module: ['.', 'gorm']
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+          # The root module has no dependencies and therefore no go.sum, which the cache
+          # step cannot resolve. Both modules build in seconds; caching buys nothing.
+          cache: false
+
+      - name: gofmt
+        working-directory: ${{ matrix.module }}
+        run: |
+          unformatted=$(gofmt -l .)
+          if [ -n "$unformatted" ]; then
+            echo "::error::gofmt needs to be run on:"
+            echo "$unformatted"
+            exit 1
+          fi
+
+      - name: Build
+        working-directory: ${{ matrix.module }}
+        run: go build ./...
+
+      - name: Vet
+        working-directory: ${{ matrix.module }}
+        run: go vet ./...
+
+      # The test suites boot a real `nusadb-server` binary, which is not present in this
+      # repository, so they are compiled but not run. `-run XXX` matches no test, which
+      # still forces the test files themselves to typecheck.
+      - name: Compile tests
+        working-directory: ${{ matrix.module }}
+        run: go test -run XXX ./...
