@@ -1,0 +1,16 @@
+// Workspace for local development across the two modules in this repository.
+//
+// This takes over the job the `replace` directive in gorm/go.mod used to do: builds and
+// tests run inside gorm/ resolve github.com/nusadb/go from this working tree, so editing the
+// root driver is immediately reflected in the dialector. The difference is that a workspace
+// is never part of a published module, so gorm's go.mod stays clean and points consumers at
+// the released version on the module proxy.
+//
+// To build a module exactly as an outside consumer would -- ignoring this workspace and
+// resolving the root driver from proxy.golang.org -- set GOWORK=off.
+go 1.24
+
+use (
+	.
+	./gorm
+)

@@ -12,8 +12,3 @@ require (
 	github.com/jinzhu/now v1.1.5 // indirect
 	golang.org/x/text v0.21.0 // indirect
 )
-
-// Local development builds resolve the root driver from the working tree. Consumers ignore
-// `replace` directives in a dependency's go.mod, so they get the required v0.1.0 from the
-// `v0.1.0` tag instead.
-replace github.com/nusadb/go => ../

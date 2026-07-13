@@ -63,18 +63,18 @@ jobs:
           go build ./...
           go vet ./...
 
-      # For the gorm submodule, drop the `replace` so the build resolves the root driver from
-      # the proxy exactly as a consumer would. This is the step that fails loudly if the root
-      # tag was never pushed.
+      # GOWORK=off is load-bearing. Without it the repo's go.work would resolve the root driver
+      # from the working tree, and this step would pass even if the root tag had never been
+      # pushed -- exactly the failure it exists to catch. Off, the build resolves
+      # github.com/nusadb/go from proxy.golang.org, precisely as an outside consumer does.
       - name: Verify the module resolves as a consumer sees it
         if: steps.mod.outputs.dir == 'gorm'
         working-directory: gorm
         env:
-          GOFLAGS: -mod=mod
+          GOWORK: off
         run: |
-          go mod edit -dropreplace=github.com/nusadb/go
-          go mod tidy
           go build ./...
+          go vet ./...
 
       - name: Warm the module proxy
         env:

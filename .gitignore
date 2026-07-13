@@ -1,0 +1,6 @@
+# go.work is committed on purpose: it is what lets gorm/ resolve the root driver from the
+# working tree during development. go.work.sum is a local build artifact and is not.
+go.work.sum
+
+*.test
+*.out
