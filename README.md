@@ -168,16 +168,6 @@ db, _ := sql.Open("nusadb", "nusadb://user@host:5678/nusadb?tls=mycfg")
 
 `tls` is absent (plaintext) by default.
 
-## Tests
-
-```bash
-cargo build -p nusadb-server          # the tests boot this binary
-cd drivers/go && go test ./...
-```
-
-The tests boot a real `nusadb-server` on an ephemeral port (honouring
-`CARGO_TARGET_DIR`) and exercise queries, parameters, prepared statements, errors,
-transaction commit/rollback, and SCRAM auth.
 
 ## License
 
