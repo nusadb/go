@@ -168,6 +168,16 @@ db, _ := sql.Open("nusadb", "nusadb://user@host:5678/nusadb?tls=mycfg")
 
 `tls` is absent (plaintext) by default.
 
+## Tests
+
+```bash
+cargo build -p nusadb-server
+node drivers/node/test/test.js
+```
+
+The tests boot a real `nusadb-server` (ephemeral port, honouring
+`CARGO_TARGET_DIR`) and cover simple/parameterised/prepared queries, errors, the
+pool, and SCRAM auth.
 
 ## License
 
